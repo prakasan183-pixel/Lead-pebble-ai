@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Lead } from '../utils/leadScoring.ts';
+import { apiFetch } from '../services/api.ts';
 import {
   Send,
   FileText,
@@ -50,7 +51,7 @@ export function GoogleWorkspaceHub({
 
   useEffect(() => {
     if (userToken) {
-      fetch('/api/workspace/chat/spaces', {
+      apiFetch('/api/workspace/chat/spaces', {
         headers: { Authorization: `Bearer ${userToken}` },
       })
         .then((r) => r.json())
@@ -87,7 +88,7 @@ export function GoogleWorkspaceHub({
     setSendSuccess(null);
 
     try {
-      const res = await fetch('/api/workspace/chat/send-message', {
+      const res = await apiFetch('/api/workspace/chat/send-message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,7 +128,7 @@ export function GoogleWorkspaceHub({
     setIsCreatingForm(true);
     setFormError(null);
     try {
-      const res = await fetch('/api/workspace/forms/create-intake', {
+      const res = await apiFetch('/api/workspace/forms/create-intake', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

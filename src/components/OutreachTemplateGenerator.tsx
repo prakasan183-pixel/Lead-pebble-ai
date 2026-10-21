@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Lead } from '../utils/leadScoring.ts';
+import { apiFetch } from '../services/api.ts';
 import { WebsiteStatusBadge, LeadScoreBadge } from './StatusBadge.tsx';
 import {
   Mail,
@@ -95,7 +96,7 @@ export function OutreachTemplateGenerator({
     setInMailBody('');
 
     try {
-      const res = await fetch('/api/ai/outreach', {
+      const res = await apiFetch('/api/ai/outreach', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

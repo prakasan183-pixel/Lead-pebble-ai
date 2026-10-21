@@ -1,0 +1,9 @@
+.gcloudignore
+.git/
+node_modules/
+.env
+.env.*
+!.env.example
+.aistudio/
+.gmp_cache/
+data/

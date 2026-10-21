@@ -1,7 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { FieldValue } from 'firebase-admin/firestore';
 import type { Lead } from '../utils/leadScoring.ts';
+import { firestore } from './firebaseAdmin.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,6 +14,21 @@ function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
+}
+
+function usesFirestore(): boolean {
+  return process.env.NODE_ENV === 'production';
+}
+
+function getLeadCollection(userId: string) {
+  if (!userId) {
+    throw new Error('A signed-in user is required to access saved leads.');
+  }
+  return firestore.collection('users').doc(userId).collection('leads');
+}
+
+function getLeadDocumentId(id: string): string {
+  return Buffer.from(id).toString('base64url');
 }
 
 function cleanLeadRecords(leads: Lead[]): Lead[] {
@@ -63,7 +80,7 @@ function cleanLeadRecords(leads: Lead[]): Lead[] {
     });
 }
 
-export function getAllLeads(): Lead[] {
+function getLocalLeads(): Lead[] {
   ensureDataDir();
   if (!fs.existsSync(DB_FILE)) {
     fs.writeFileSync(DB_FILE, '[]', 'utf-8');
@@ -87,11 +104,31 @@ export function getAllLeads(): Lead[] {
   }
 }
 
-export function saveLead(lead: Lead): Lead {
-  ensureDataDir();
-  const leads = getAllLeads();
-  const existingIndex = leads.findIndex((item) => item.id === lead.id);
+export async function getAllLeads(userId: string): Promise<Lead[]> {
+  if (usesFirestore()) {
+    const snapshot = await getLeadCollection(userId).orderBy('_savedAt', 'desc').get();
+    return snapshot.docs.map((document) => {
+      const lead = document.data();
+      delete lead._savedAt;
+      return lead as Lead;
+    });
+  }
+  return getLocalLeads();
+}
+
+export async function saveLead(userId: string, lead: Lead): Promise<Lead> {
   const updatedLead: Lead = { ...lead, leadScore: undefined, opportunityTier: undefined };
+  if (usesFirestore()) {
+    await getLeadCollection(userId).doc(getLeadDocumentId(lead.id)).set({
+      ...JSON.parse(JSON.stringify(updatedLead)),
+      _savedAt: FieldValue.serverTimestamp(),
+    });
+    return updatedLead;
+  }
+
+  ensureDataDir();
+  const leads = getLocalLeads();
+  const existingIndex = leads.findIndex((item) => item.id === lead.id);
 
   if (existingIndex >= 0) {
     leads[existingIndex] = updatedLead;
@@ -103,30 +140,61 @@ export function saveLead(lead: Lead): Lead {
   return updatedLead;
 }
 
-export function batchSaveLeads(newLeads: Lead[]): Lead[] {
-  ensureDataDir();
-  const currentLeads = getAllLeads();
-  const saved: Lead[] = [];
+export async function batchSaveLeads(userId: string, newLeads: Lead[]): Promise<Lead[]> {
+  const saved = newLeads.map((lead) => ({
+    ...lead,
+    leadScore: undefined,
+    opportunityTier: undefined,
+  }));
+  if (usesFirestore()) {
+    const collection = getLeadCollection(userId);
+    const latestById = new Map<string, Lead>();
+    saved.forEach((lead) => latestById.set(lead.id, lead));
+    const entries = Array.from(latestById.entries());
 
-  for (const lead of newLeads) {
+    for (let offset = 0; offset < entries.length; offset += 500) {
+      const batch = firestore.batch();
+      entries.slice(offset, offset + 500).forEach(([id, lead]) => {
+        batch.set(collection.doc(getLeadDocumentId(id)), {
+          ...JSON.parse(JSON.stringify(lead)),
+          _savedAt: FieldValue.serverTimestamp(),
+        });
+      });
+      await batch.commit();
+    }
+    return saved;
+  }
+
+  ensureDataDir();
+  const currentLeads = getLocalLeads();
+
+  for (const lead of saved) {
     const existingIndex = currentLeads.findIndex((item) => item.id === lead.id);
-    const updatedLead: Lead = { ...lead, leadScore: undefined, opportunityTier: undefined };
 
     if (existingIndex >= 0) {
-      currentLeads[existingIndex] = updatedLead;
+      currentLeads[existingIndex] = lead;
     } else {
-      currentLeads.unshift(updatedLead);
+      currentLeads.unshift(lead);
     }
-    saved.push(updatedLead);
   }
 
   fs.writeFileSync(DB_FILE, JSON.stringify(currentLeads, null, 2), 'utf-8');
   return saved;
 }
 
-export function deleteLead(id: string): boolean {
+export async function deleteLead(userId: string, id: string): Promise<boolean> {
+  if (usesFirestore()) {
+    const document = getLeadCollection(userId).doc(getLeadDocumentId(id));
+    const existing = await document.get();
+    if (existing.exists) {
+      await document.delete();
+      return true;
+    }
+    return false;
+  }
+
   ensureDataDir();
-  const leads = getAllLeads();
+  const leads = getLocalLeads();
   const filtered = leads.filter((lead) => lead.id !== id);
   if (filtered.length !== leads.length) {
     fs.writeFileSync(DB_FILE, JSON.stringify(filtered, null, 2), 'utf-8');

@@ -16,6 +16,7 @@ import {
   logout as authLogout,
   updateAccountName,
 } from './services/auth.ts';
+import { apiFetch } from './services/api.ts';
 import { getStoredProfileAvatar, storeProfileAvatar } from './utils/profileAvatars.ts';
 import type { User } from 'firebase/auth';
 import {
@@ -74,7 +75,7 @@ const AccountSettingsView = lazy(() =>
 
 async function resolveLocationName(coords: GeoCoordinates): Promise<string> {
   try {
-    const response = await fetch(
+    const response = await apiFetch(
       `/api/location/reverse-geocode?lat=${encodeURIComponent(coords.lat)}&lng=${encodeURIComponent(coords.lng)}`
     );
     const data = await response.json();
@@ -245,7 +246,7 @@ export default function App() {
         });
       });
     }
-    fetch('/api/leads/saved')
+    apiFetch('/api/leads/saved')
       .then((response) => {
         if (!response.ok) throw new Error(`Saved company request failed (${response.status}).`);
         return response.json();
@@ -401,7 +402,7 @@ export default function App() {
   // Lead CRUD Handlers
   const handleSaveLead = async (leadToSave: Lead) => {
     try {
-      const response = await fetch('/api/leads/save', {
+      const response = await apiFetch('/api/leads/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lead: leadToSave }),
@@ -423,7 +424,7 @@ export default function App() {
 
   const handleBatchSaveLeads = async (newLeads: Lead[]) => {
     try {
-      const response = await fetch('/api/leads/batch-save', {
+      const response = await apiFetch('/api/leads/batch-save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leads: newLeads }),
@@ -454,7 +455,7 @@ export default function App() {
       const useCurrentCoordinates =
         coordinatesOverride !== undefined ||
         requestedLocation.toLowerCase() === locationName.trim().toLowerCase();
-      const response = await fetch('/api/leads/discover', {
+      const response = await apiFetch('/api/leads/discover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -482,7 +483,7 @@ export default function App() {
         searchCategory: lead.searchCategory || searchCategory,
         searchLocation: requestedLocation,
       }));
-      const saveResponse = await fetch('/api/leads/batch-save', {
+      const saveResponse = await apiFetch('/api/leads/batch-save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leads: discoveredLeads }),
@@ -511,7 +512,7 @@ export default function App() {
   const handleDeleteLead = async (leadId: string) => {
     setLeads((prev) => prev.filter((l) => l.id !== leadId));
     try {
-      await fetch(`/api/leads/${leadId}`, { method: 'DELETE' });
+      await apiFetch(`/api/leads/${leadId}`, { method: 'DELETE' });
     } catch (err) {
       console.error('Error deleting lead:', err);
     }

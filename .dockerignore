@@ -1,0 +1,7 @@
+.env*
+.git/
+.aistudio/
+.gmp_cache/
+node_modules/
+data/
+npm-debug.log*

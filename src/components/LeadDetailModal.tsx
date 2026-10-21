@@ -24,6 +24,7 @@ import {
   Star,
 } from 'lucide-react';
 import { getAccessToken } from '../services/auth.ts';
+import { apiFetch } from '../services/api.ts';
 
 interface LeadDetailModalProps {
   lead: Lead | null;
@@ -99,7 +100,7 @@ export function LeadDetailModal({
     setIsVerifying(true);
     setVerificationError(null);
     try {
-      const res = await fetch('/api/leads/verify-website', {
+      const res = await apiFetch('/api/leads/verify-website', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -140,7 +141,7 @@ export function LeadDetailModal({
     setOutreachError(null);
     setOutreachData(null);
     try {
-      const res = await fetch('/api/ai/outreach', {
+      const res = await apiFetch('/api/ai/outreach', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -164,7 +165,7 @@ export function LeadDetailModal({
     setIsGeneratingMockup(true);
     setMockupError(null);
     try {
-      const res = await fetch('/api/ai/generate-mockup', {
+      const res = await apiFetch('/api/ai/generate-mockup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -188,7 +189,7 @@ export function LeadDetailModal({
   // Fetch Google Chat Spaces if user is authenticated
   useEffect(() => {
     if (activeTab === 'workspace' && userToken) {
-      fetch('/api/workspace/chat/spaces', {
+      apiFetch('/api/workspace/chat/spaces', {
         headers: { Authorization: `Bearer ${userToken}` },
       })
         .then((r) => r.json())
@@ -219,7 +220,7 @@ export function LeadDetailModal({
     setChatSuccessMessage(null);
 
     try {
-      const res = await fetch('/api/workspace/chat/send-message', {
+      const res = await apiFetch('/api/workspace/chat/send-message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -253,7 +254,7 @@ export function LeadDetailModal({
     setIsCreatingForm(true);
     setFormError(null);
     try {
-      const res = await fetch('/api/workspace/forms/create-intake', {
+      const res = await apiFetch('/api/workspace/forms/create-intake', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

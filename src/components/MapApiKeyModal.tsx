@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Key, CheckCircle, AlertTriangle, X, RefreshCw, ExternalLink } from 'lucide-react';
 import { getStoredMapsApiKey, setStoredMapsApiKey, normalizeGoogleMapsApiKey } from '../utils/mapsKey.ts';
+import { apiFetch } from '../services/api.ts';
 
 interface MapApiKeyModalProps {
   isOpen: boolean;
@@ -37,7 +38,7 @@ export function MapApiKeyModal({ isOpen, onClose, onKeyUpdated }: MapApiKeyModal
     setTestResult(null);
 
     try {
-      const res = await fetch(`/api/location/test-maps-key?key=${encodeURIComponent(cleaned)}`);
+      const res = await apiFetch(`/api/location/test-maps-key?key=${encodeURIComponent(cleaned)}`);
       const data = await res.json();
 
       setTestResult({
