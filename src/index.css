@@ -1,0 +1,137 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  color-scheme: dark;
+  background-color: #090a0b;
+  color: #e5e7eb;
+}
+
+.dark body {
+  background-color: #090a0b;
+}
+
+.dark [class*="dark:bg-slate-950"],
+.dark [class*="dark:bg-gray-950"] {
+  background-color: #090a0b;
+}
+
+.dark [class*="dark:bg-slate-900"],
+.dark [class*="dark:bg-gray-900"] {
+  background-color: #111214;
+}
+
+.dark [class*="dark:bg-slate-800"],
+.dark [class*="dark:bg-gray-800"] {
+  background-color: #1b1c1e;
+}
+
+.dark [class*="dark:bg-slate-700"],
+.dark [class*="dark:bg-gray-700"] {
+  background-color: #252629;
+}
+
+.dark [class*="dark:border-slate-800"],
+.dark [class*="dark:border-gray-800"] {
+  border-color: #292a2d;
+}
+
+.dark [class*="dark:border-slate-700"],
+.dark [class*="dark:border-gray-700"] {
+  border-color: #36373a;
+}
+
+@keyframes pebble-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-6px) rotate(3deg); }
+}
+
+@keyframes pebble-glow {
+  0%, 100% { opacity: 0.55; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes pebble-dot-hop {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+.pebble-loader-float {
+  animation: pebble-float 2.4s ease-in-out infinite;
+}
+
+.pebble-loader-glow {
+  animation: pebble-glow 2.4s ease-in-out infinite;
+}
+
+.pebble-loader-dot {
+  animation: pebble-dot-hop 1s ease-in-out infinite;
+}
+
+@keyframes welcome-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes welcome-drift {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.035); }
+}
+
+@keyframes welcome-spark {
+  0%, 100% { opacity: 0.45; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+.welcome-pebble-orbit {
+  animation: welcome-orbit 14s linear infinite;
+}
+
+.welcome-pebble-orbit-slow {
+  animation-duration: 22s;
+  animation-direction: reverse;
+}
+
+.welcome-logo {
+  animation: welcome-drift 3s ease-in-out infinite;
+  filter: drop-shadow(0 12px 24px rgb(99 102 241 / 28%));
+}
+
+.welcome-pebble-spark {
+  animation: welcome-spark 2.2s ease-in-out infinite;
+}
+
+.welcome-pebble-spark-delay {
+  animation-delay: 0.7s;
+}
+
+.welcome-color-wash {
+  animation: welcome-drift 9s ease-in-out infinite;
+}
+
+.welcome-color-wash-delay {
+  animation-delay: 1.8s;
+}
+
+@keyframes tutorial-pointer-move {
+  0%, 100% { transform: translate(-2px, -1px); }
+  50% { transform: translate(4px, 4px); }
+}
+
+.tutorial-pointer {
+  animation: tutorial-pointer-move 1.1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pebble-loader-float,
+  .pebble-loader-glow,
+  .pebble-loader-dot,
+  .welcome-pebble-orbit,
+  .welcome-logo,
+  .welcome-pebble-spark,
+  .welcome-color-wash,
+  .tutorial-pointer {
+    animation: none;
+  }
+}

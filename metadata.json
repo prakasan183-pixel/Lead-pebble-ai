@@ -1,0 +1,6 @@
+{
+  "name": "LeadPulse AI - Industrial Lead Discovery",
+  "description": "Discover high-value manufacturing and industrial businesses with no website, score leads, manage CRM pipelines, and generate personalized outreach.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
