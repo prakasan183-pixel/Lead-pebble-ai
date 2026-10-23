@@ -91,7 +91,7 @@ export function Sidebar({
     {
       id: 'outreach',
       label: 'Outreach Generator',
-      sublabel: 'DeepSeek email & LinkedIn',
+      sublabel: 'Groq email & LinkedIn',
       icon: Mail,
       badgeStyle: 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold',
     },

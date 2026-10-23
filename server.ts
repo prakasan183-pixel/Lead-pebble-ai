@@ -682,11 +682,11 @@ app.post('/api/ai/outreach', async (req, res) => {
     if (!lead || typeof lead.companyName !== 'string' || !lead.companyName.trim() || lead.companyName.trim().toLowerCase() === 'unknown') {
       return res.status(400).json({ success: false, error: 'Lead details required' });
     }
-    const deepSeekKey = process.env.DEEPSEEK_API_KEY?.trim();
-    if (!deepSeekKey || /paste-your-deepseek-api-key-here|your-deepseek-api-key/i.test(deepSeekKey)) {
+    const groqKey = process.env.GROQ_API_KEY?.trim();
+    if (!groqKey || /paste-your-groq-api-key-here|your-groq-api-key/i.test(groqKey)) {
       return res.status(500).json({
         success: false,
-        error: 'Outreach drafting is not configured. Add DEEPSEEK_API_KEY to the server environment and redeploy or restart the server.',
+        error: 'Outreach drafting is not configured. Add GROQ_API_KEY to the server environment and redeploy or restart the server.',
       });
     }
 
@@ -699,14 +699,14 @@ Optional sender offer: ${JSON.stringify(offer)}
 Return one JSON object with exactly these keys and types:
 {"headline":string,"industryInsight":string,"emailPitch":{"subjectOptions":[string,string,string],"body":string,"followUpSnippet":string},"linkedInOutreach":{"connectionNote":string,"inMailMessage":{"subject":string,"body":string},"followUpMessage":string},"whatsappMessage":string,"coldCallScript":{"opener":string,"theHook":string,"pitch":string,"objectionRebuttals":[{"objection":string,"response":string}],"objectionRebuttal":string,"callToAction":string},"commercialAuditSummary":string}`;
 
-    const deepSeekResponse = await fetch('https://api.deepseek.com/chat/completions', {
+    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${deepSeekKey}`,
+        Authorization: `Bearer ${groqKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'llama-3.3-70b-versatile',
         temperature: 0.3,
         response_format: { type: 'json_object' },
         messages: [
@@ -716,7 +716,7 @@ Return one JSON object with exactly these keys and types:
       }),
       signal: AbortSignal.timeout(30000),
     });
-    const result = await deepSeekResponse.json() as {
+    const result = await groqResponse.json() as {
       choices?: Array<{ message?: { content?: string | null } }>;
       error?: {
         code?: string;
@@ -724,36 +724,34 @@ Return one JSON object with exactly these keys and types:
         message?: string;
       };
     };
-    if (!deepSeekResponse.ok) {
+    if (!groqResponse.ok) {
       const providerCode = result.error?.code || result.error?.type || 'unknown';
-      console.error('DeepSeek outreach request failed:', deepSeekResponse.status, providerCode);
-      const status = deepSeekResponse.status === 429 ? 503 : deepSeekResponse.status === 402 ? 402 : 502;
-      const error = deepSeekResponse.status === 401
-        ? 'DeepSeek rejected the API key. Check the DEEPSEEK_API_KEY configured on the server.'
-        : deepSeekResponse.status === 429
-          ? 'DeepSeek rate limit or balance limit reached. Check your DeepSeek account balance and usage, then retry.'
-          : deepSeekResponse.status === 402
-            ? 'DeepSeek requires an available account balance for this request. Add balance to the DeepSeek account for this API key, then retry.'
-          : deepSeekResponse.status === 403
-            ? 'DeepSeek denied this request. Check API access and account status.'
-            : 'DeepSeek outreach drafting failed. Check the API key, account balance, and DeepSeek service status.';
+      console.error('Groq outreach request failed:', groqResponse.status, providerCode);
+      const status = groqResponse.status === 429 ? 503 : 502;
+      const error = groqResponse.status === 401
+        ? 'Groq rejected the API key. Check the GROQ_API_KEY configured on the server.'
+        : groqResponse.status === 429
+          ? 'Groq rate limit reached. Wait briefly and retry, or check the rate limits for your Groq account.'
+          : groqResponse.status === 403
+            ? 'Groq denied this request. Check API access and account status.'
+            : 'Groq outreach drafting failed. Check the API key and Groq service status.';
       return res.status(status).json({ success: false, error });
     }
 
     const content = result.choices?.[0]?.message?.content;
     if (!content) {
-      return res.status(502).json({ success: false, error: 'DeepSeek returned an empty outreach draft.' });
+      return res.status(502).json({ success: false, error: 'Groq returned an empty outreach draft.' });
     }
     let outreach: unknown;
     try {
       outreach = JSON.parse(content);
     } catch {
-      return res.status(502).json({ success: false, error: 'DeepSeek returned an invalid outreach response.' });
+      return res.status(502).json({ success: false, error: 'Groq returned an invalid outreach response.' });
     }
     return res.json({ success: true, outreach });
   } catch (error: any) {
     console.error('Error generating outreach:', error?.name || 'unknown error');
-    res.status(502).json({ success: false, error: 'Could not reach DeepSeek for outreach drafting. Check your network and try again.' });
+    res.status(502).json({ success: false, error: 'Could not reach Groq for outreach drafting. Check your network and try again.' });
   }
 });
 

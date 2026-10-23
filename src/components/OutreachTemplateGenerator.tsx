@@ -270,7 +270,7 @@ Closing CTA: ${outreachData.coldCallScript?.callToAction}
               className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>{isLoading ? 'Generating...' : 'Re-Generate with DeepSeek'}</span>
+              <span>{isLoading ? 'Generating...' : 'Re-Generate with Groq'}</span>
             </button>
           </div>
         </div>
