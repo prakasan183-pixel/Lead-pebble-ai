@@ -50,7 +50,12 @@ if (!Number.isInteger(portValue) || portValue < 1 || portValue > 65535) {
 }
 const PORT = portValue;
 
-app.use(express.json({ limit: '10mb' }));
+app.use((req, res, next) => {
+  if (process.env.VERCEL === '1' && req.body !== undefined) {
+    return next();
+  }
+  return express.json({ limit: '10mb' })(req, res, next);
+});
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
