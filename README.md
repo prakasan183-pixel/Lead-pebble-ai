@@ -14,7 +14,7 @@ LeadPebble is a company discovery and CRM app for finding, organizing, and manag
 
 ## Production Deployment
 
-Deploy the frontend and API together on Vercel. The API uses Google Places for real business listings; no Firebase account, sign-in, or database is used.
+Deploy the frontend and API together on Vercel. The API uses Google Places for real business listings, and saved data is kept in each browser.
 
 1. Import this repository into Vercel with the project root as the **Root Directory**.
 2. Add `GOOGLE_MAPS_API_KEY` in **Project Settings → Environment Variables**. Enable Google Places API (New) for this key and restrict the key to that API. Keep it server-side; do not use a browser-restricted key.

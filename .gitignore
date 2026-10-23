@@ -9,4 +9,3 @@ coverage/
 .aistudio/
 .gmp_cache/
 data/crm_leads.json
-/.firebase/
