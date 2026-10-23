@@ -27,4 +27,4 @@ The app opens directly to the company directory. On first visit it searches Goog
 
 Company discovery uses multiple category-specific Google Places searches, then merges duplicate place IDs. When Google provides them, records include structured city/state/country, international phone, business status, regular hours, business types, and Google's editorial summary, with the Google Maps source retained. Google does not provide every business field for every listing; unavailable details remain unknown rather than being inferred. Search coverage and returned details depend on Places data, the selected area, API quotas, and billing.
 
-Outreach drafts use Groq with the `llama-3.3-70b-versatile` model via `GROQ_API_KEY`. Add this key to the local `.env` file for development or to the Vercel project's environment variables for deployment. Groq's free tier has rate limits.
+Outreach drafts use Groq with the `openai/gpt-oss-120b` model via `GROQ_API_KEY`. Add this key to the local `.env` file for development or to the Vercel project's environment variables for deployment. Groq's free tier has rate limits.

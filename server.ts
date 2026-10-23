@@ -706,7 +706,7 @@ Return one JSON object with exactly these keys and types:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-120b',
         temperature: 0.3,
         response_format: { type: 'json_object' },
         messages: [
@@ -732,6 +732,8 @@ Return one JSON object with exactly these keys and types:
         ? 'Groq rejected the API key. Check the GROQ_API_KEY configured on the server.'
         : groqResponse.status === 429
           ? 'Groq rate limit reached. Wait briefly and retry, or check the rate limits for your Groq account.'
+          : groqResponse.status === 404 || providerCode === 'model_not_found'
+            ? 'The configured Groq model is not available to this account. Check the model ID and available models in Groq Console.'
           : groqResponse.status === 403
             ? 'Groq denied this request. Check API access and account status.'
             : 'Groq outreach drafting failed. Check the API key and Groq service status.';
