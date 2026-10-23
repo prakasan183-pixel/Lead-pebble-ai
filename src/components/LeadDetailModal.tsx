@@ -23,7 +23,6 @@ import {
   AlertTriangle,
   Star,
 } from 'lucide-react';
-import { getAccessToken } from '../services/auth.ts';
 import { apiFetch } from '../services/api.ts';
 
 interface LeadDetailModalProps {

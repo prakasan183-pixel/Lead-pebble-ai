@@ -5,20 +5,12 @@ import { deduplicateLeads } from './utils/leadScoring.ts';
 import { Sidebar, type NavTab } from './components/Sidebar.tsx';
 import { DiscoveryView } from './components/DiscoveryView.tsx';
 import { PebbleLoader } from './components/PebbleLoader.tsx';
-import { SignInView } from './components/SignInView.tsx';
-import { WelcomeView } from './components/WelcomeView.tsx';
 import { FirstRunTutorial } from './components/FirstRunTutorial.tsx';
 import { exportLeadsToCsv } from './utils/export.ts';
-import {
-  initAuth,
-  googleSignIn,
-  requestWorkspaceAccess,
-  logout as authLogout,
-  updateAccountName,
-} from './services/auth.ts';
 import { apiFetch } from './services/api.ts';
 import { getStoredProfileAvatar, storeProfileAvatar } from './utils/profileAvatars.ts';
-import type { User } from 'firebase/auth';
+import { getLocalProfileName, getSavedLeads, saveLeads } from './services/leadStorage.ts';
+import type { LocalUser } from './types/localUser.ts';
 import {
   COIMBATORE_DEFAULT_HUB,
   requestLivePosition,
@@ -91,37 +83,31 @@ async function resolveLocationName(coords: GeoCoordinates): Promise<string> {
   return `Near ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`;
 }
 
-function hasCompletedWelcome(uid: string): boolean {
-  try {
-    return localStorage.getItem(`leadpebble_welcome_completed:${uid}`) === 'true';
-  } catch (error) {
-    console.warn('Unable to read welcome status:', error);
-    return false;
-  }
-}
+const LOCAL_USER_ID = 'local';
 
-function saveWelcomeCompletion(uid: string): void {
+function hasCompletedTutorial(): boolean {
   try {
-    localStorage.setItem(`leadpebble_welcome_completed:${uid}`, 'true');
-  } catch (error) {
-    console.warn('Unable to save welcome status:', error);
-  }
-}
-
-function hasCompletedTutorial(uid: string): boolean {
-  try {
-    return localStorage.getItem(`leadpebble_tutorial_completed:${uid}`) === 'true';
+    return localStorage.getItem(`leadpebble_tutorial_completed:${LOCAL_USER_ID}`) === 'true';
   } catch (error) {
     console.warn('Unable to read tutorial status:', error);
     return false;
   }
 }
 
-function saveTutorialCompletion(uid: string): void {
+function saveTutorialCompletion(): void {
   try {
-    localStorage.setItem(`leadpebble_tutorial_completed:${uid}`, 'true');
+    localStorage.setItem(`leadpebble_tutorial_completed:${LOCAL_USER_ID}`, 'true');
   } catch (error) {
     console.warn('Unable to save tutorial status:', error);
+  }
+}
+
+function loadLocalUser(): LocalUser {
+  try {
+    return { uid: LOCAL_USER_ID, displayName: getLocalProfileName(), email: null };
+  } catch (error) {
+    console.warn('Unable to read local profile:', error);
+    return { uid: LOCAL_USER_ID, displayName: 'My workspace', email: null };
   }
 }
 
@@ -154,23 +140,13 @@ export default function App() {
   // Distance filter state: null = all, 3 = <= 3km, 5 = <= 5km, etc.
   const [distanceFilter, setDistanceFilter] = useState<number | null>(null);
 
-  // Authentication
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
-  const [userToken, setUserToken] = useState<string | null>(null);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isSigningOut, setIsSigningOut] = useState(false);
-  const [isAuthorizingWorkspace, setIsAuthorizingWorkspace] = useState(false);
+  const [user, setUser] = useState<LocalUser>(loadLocalUser);
+  const [userToken] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [hasCompletedFirstRun, setHasCompletedFirstRun] = useState(false);
-  const [hasCompletedFirstRunTutorial, setHasCompletedFirstRunTutorial] = useState(false);
+  const [hasCompletedFirstRunTutorial, setHasCompletedFirstRunTutorial] = useState(hasCompletedTutorial);
   const [isFirstRunTutorialVisible, setIsFirstRunTutorialVisible] = useState(false);
-  const [profileAvatarId, setProfileAvatarId] = useState('factory');
-  const [pendingInitialSearch, setPendingInitialSearch] = useState<{
-    coordinates: GeoCoordinates;
-    location: string;
-  } | null>(null);
-  const savedLeadsLoadedForUidRef = useRef<string | null>(null);
+  const [profileAvatarId, setProfileAvatarId] = useState(() => getStoredProfileAvatar(LOCAL_USER_ID));
+  const initialSearchStartedRef = useRef(false);
   const discoverHandlerRef = useRef<
     ((
       industry: string,
@@ -201,41 +177,19 @@ export default function App() {
     }
   }, [isDark]);
 
-  // Initialize Firebase Auth listener
+  // Load saved companies from this browser.
   useEffect(() => {
-    const unsubscribe = initAuth(
-      (currentUser, token) => {
-        setUser(currentUser);
-        setUserToken(token);
-        setHasCompletedFirstRun(hasCompletedWelcome(currentUser.uid));
-        setHasCompletedFirstRunTutorial(hasCompletedTutorial(currentUser.uid));
-        setIsFirstRunTutorialVisible(false);
-        setProfileAvatarId(getStoredProfileAvatar(currentUser.uid));
-        setIsAuthReady(true);
-      },
-      () => {
-        setUser(null);
-        setUserToken(null);
-        setHasCompletedFirstRun(false);
-        setHasCompletedFirstRunTutorial(false);
-        setIsFirstRunTutorialVisible(false);
-        setIsAuthReady(true);
-      }
-    );
-    return () => unsubscribe && unsubscribe();
+    try {
+      setLeads(getSavedLeads());
+    } catch (error) {
+      console.error('Could not load browser-saved companies:', error);
+      setDiscoveryError(error instanceof Error ? error.message : 'Could not load saved companies.');
+    } finally {
+      setIsLoadingLeads(false);
+    }
   }, []);
 
-  // Load saved leads only after first-run location setup is complete.
   useEffect(() => {
-    if (!user) {
-      savedLeadsLoadedForUidRef.current = null;
-      setIsLoadingLeads(true);
-      return;
-    }
-    if (!hasCompletedFirstRun || savedLeadsLoadedForUidRef.current === user.uid) return;
-
-    savedLeadsLoadedForUidRef.current = user.uid;
-    setIsLoadingLeads(true);
     if (initialStoredLoc?.isRealGps) {
       void resolveLocationName(initialStoredLoc.coords).then((resolvedName) => {
         setLocationName(resolvedName);
@@ -246,45 +200,13 @@ export default function App() {
         });
       });
     }
-    apiFetch('/api/leads/saved')
-      .then((response) => {
-        if (!response.ok) throw new Error(`Saved company request failed (${response.status}).`);
-        return response.json();
-      })
-      .then((data) => {
-        if (!data.success || !Array.isArray(data.leads)) {
-          throw new Error(data.error || 'Saved companies response was invalid.');
-        }
-        setLeads(data.leads);
-      })
-      .catch((err) => {
-        console.error('Error fetching leads:', err);
-        setDiscoveryError(err instanceof Error ? err.message : 'Could not load saved companies.');
-      })
-      .finally(() => {
-        setIsLoadingLeads(false);
-        if (pendingInitialSearch && discoverHandlerRef.current) {
-          void discoverHandlerRef.current(
-            'All Categories',
-            pendingInitialSearch.location,
-            undefined,
-            pendingInitialSearch.coordinates
-          );
-          setPendingInitialSearch(null);
-        }
-      });
-  }, [user, hasCompletedFirstRun, initialStoredLoc, pendingInitialSearch]);
+  }, [initialStoredLoc]);
 
   useEffect(() => {
-    if (
-      user &&
-      hasCompletedFirstRun &&
-      !isLoadingLeads &&
-      !hasCompletedFirstRunTutorial
-    ) {
+    if (!isLoadingLeads && !isDiscovering && leads.length > 0 && !hasCompletedFirstRunTutorial) {
       setIsFirstRunTutorialVisible(true);
     }
-  }, [user, hasCompletedFirstRun, isLoadingLeads, hasCompletedFirstRunTutorial]);
+  }, [isLoadingLeads, isDiscovering, leads.length, hasCompletedFirstRunTutorial]);
 
   // Live Geolocation Handlers
   const handleToggleLiveGps = async () => {
@@ -352,90 +274,26 @@ export default function App() {
     setPermissionError(null);
   };
 
-  const finishFirstRun = (
-    coordinates: GeoCoordinates,
-    selectedLocation: string,
-    isRealGps: boolean,
-    mode: 'live_gps' | 'preset' | 'manual'
-  ) => {
-    if (!user) return;
-    setUserLocation(coordinates);
-    setLocationName(selectedLocation);
-    setIsGpsLocation(isRealGps);
-    setStoredLocation({
-      mode,
-      coords: coordinates,
-      name: selectedLocation,
-      isRealGps,
-      updatedAt: Date.now(),
-    });
-    setPendingInitialSearch({ coordinates, location: selectedLocation });
-  };
-
-  const handleCompleteFirstRun = () => {
-    if (!user) return;
-    saveWelcomeCompletion(user.uid);
-    setHasCompletedFirstRun(true);
-  };
-
-  const handleWelcomeUseDeviceLocation = async () => {
-    setIsLocating(true);
-    setPermissionError(null);
-    try {
-      const coordinates = await requestLivePosition();
-      const resolvedName = await resolveLocationName(coordinates);
-      finishFirstRun(coordinates, resolvedName, true, 'live_gps');
-    } finally {
-      setIsLocating(false);
-    }
-  };
-
-  const handleWelcomeContinueWithLocation = () => {
-    finishFirstRun(
-      userLocation || COIMBATORE_DEFAULT_HUB.coords,
-      locationName,
-      isGpsLocation,
-      initialStoredLoc?.mode || 'preset'
-    );
-  };
-
-  // Lead CRUD Handlers
+  // Saved companies belong to this browser, so the app does not need an account or database.
   const handleSaveLead = async (leadToSave: Lead) => {
     try {
-      const response = await apiFetch('/api/leads/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead: leadToSave }),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success || !data.lead) {
-        throw new Error(data.error || 'Lead save failed');
-      }
-      setLeads((prev) => {
-        const exists = prev.some((lead) => lead.id === data.lead.id);
-        return exists
-          ? prev.map((lead) => (lead.id === data.lead.id ? data.lead : lead))
-          : [data.lead, ...prev];
-      });
+      const next = deduplicateLeads([leadToSave, ...getSavedLeads()]);
+      saveLeads(next);
+      setLeads(next);
     } catch (err) {
       console.error('Error persisting lead:', err);
+      setDiscoveryError(err instanceof Error ? err.message : 'Could not save this company in this browser.');
     }
   };
 
   const handleBatchSaveLeads = async (newLeads: Lead[]) => {
     try {
-      const response = await apiFetch('/api/leads/batch-save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leads: newLeads }),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success || !Array.isArray(data.leads)) {
-        throw new Error(data.error || 'Batch lead save failed');
-      }
-      setLeads((previous) => deduplicateLeads([...data.leads, ...previous]));
+      const next = deduplicateLeads([...newLeads, ...getSavedLeads()]);
+      saveLeads(next);
+      setLeads(next);
     } catch (err) {
       console.error('Error batch persisting leads:', err);
+      setDiscoveryError(err instanceof Error ? err.message : 'Could not save companies in this browser.');
     }
   };
 
@@ -483,22 +341,15 @@ export default function App() {
         searchCategory: lead.searchCategory || searchCategory,
         searchLocation: requestedLocation,
       }));
-      const saveResponse = await apiFetch('/api/leads/batch-save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leads: discoveredLeads }),
-      });
-      const savedData = await saveResponse.json();
-      if (!saveResponse.ok || !savedData.success || !Array.isArray(savedData.leads)) {
-        throw new Error(savedData.error || 'Companies were found but could not be saved. Try again.');
-      }
-      setLeads((previous) => deduplicateLeads([...savedData.leads, ...previous]));
+      const savedLeads = deduplicateLeads([...discoveredLeads, ...getSavedLeads()]);
+      saveLeads(savedLeads);
+      setLeads(savedLeads);
       if (data.leads.length === 0) {
         setDiscoveryError(companyName
           ? `No Google Maps listing was found for “${companyName}” in ${requestedLocation}. Try another spelling or nearby area.`
           : 'Google Maps Places returned no matches. Try a broader category or nearby location.');
       }
-      return savedData.leads;
+      return discoveredLeads;
     } catch (error) {
       const rawMessage = error instanceof Error ? error.message : 'Company discovery failed';
       setDiscoveryError(rawMessage);
@@ -509,12 +360,25 @@ export default function App() {
   };
   discoverHandlerRef.current = handleDiscoverLeads;
 
+  useEffect(() => {
+    if (isLoadingLeads || leads.length > 0 || initialSearchStartedRef.current) return;
+    initialSearchStartedRef.current = true;
+    void discoverHandlerRef.current?.(
+      'All Categories',
+      locationName,
+      undefined,
+      userLocation || COIMBATORE_DEFAULT_HUB.coords
+    );
+  }, [isLoadingLeads, leads.length, locationName, userLocation]);
+
   const handleDeleteLead = async (leadId: string) => {
-    setLeads((prev) => prev.filter((l) => l.id !== leadId));
     try {
-      await apiFetch(`/api/leads/${leadId}`, { method: 'DELETE' });
+      const next = getSavedLeads().filter((lead) => lead.id !== leadId);
+      saveLeads(next);
+      setLeads(next);
     } catch (err) {
       console.error('Error deleting lead:', err);
+      setDiscoveryError(err instanceof Error ? err.message : 'Could not delete this company.');
     }
   };
 
@@ -524,81 +388,13 @@ export default function App() {
     if (selectedLead) setSelectedLead(null);
   };
 
-  // Authentication Handlers
-  const handleLogin = async () => {
+  const handleWorkspaceAuthorization = () => {
     setAuthError(null);
-    setIsLoggingIn(true);
-    try {
-      const result = await googleSignIn();
-      setUser(result.user);
-      setUserToken(result.accessToken);
-    } catch (err: unknown) {
-      console.error('Login error:', err);
-      const code = typeof err === 'object' && err !== null && 'code' in err
-        ? String(err.code)
-        : '';
-      setAuthError(
-        code === 'auth/popup-closed-by-user'
-          ? 'Sign-in was cancelled.'
-          : code === 'auth/unauthorized-domain'
-            ? 'This site is not authorized for Firebase sign-in. Add its domain in Firebase Authentication settings.'
-            : code === 'auth/operation-not-allowed'
-              ? 'Google sign-in is not enabled for this Firebase project. Enable Google in Firebase Authentication settings.'
-            : err instanceof Error
-              ? err.message
-              : 'Google sign-in failed. Please try again.'
-      );
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
-  const handleWorkspaceAuthorization = async () => {
-    setAuthError(null);
-    if (!user) {
-      await handleLogin();
-      return;
-    }
-
-    setIsAuthorizingWorkspace(true);
-    try {
-      const result = await requestWorkspaceAccess();
-      setUser(result.user);
-      setUserToken(result.accessToken);
-    } catch (err: unknown) {
-      console.error('Google Workspace authorization error:', err);
-      const code = typeof err === 'object' && err !== null && 'code' in err
-        ? String(err.code)
-        : '';
-      setAuthError(
-        code === 'auth/unauthorized-domain'
-          ? 'This site is not authorized for Firebase sign-in. Add its domain in Firebase Authentication settings.'
-          : err instanceof Error
-            ? err.message
-            : 'Google Workspace authorization failed. Please try again.'
-      );
-    } finally {
-      setIsAuthorizingWorkspace(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    setAuthError(null);
-    setIsSigningOut(true);
-    try {
-      await authLogout();
-      setUser(null);
-      setUserToken(null);
-    } catch (err) {
-      console.error('Logout error:', err);
-      setAuthError(err instanceof Error ? err.message : 'Sign out failed. Please try again.');
-    } finally {
-      setIsSigningOut(false);
-    }
+    setAuthError('Google Workspace integrations require a separate Google OAuth setup. Google Places discovery works without sign-in.');
   };
 
   const handleCompleteFirstRunTutorial = () => {
-    if (user) saveTutorialCompletion(user.uid);
+    saveTutorialCompletion();
     setHasCompletedFirstRunTutorial(true);
     setIsFirstRunTutorialVisible(false);
   };
@@ -610,14 +406,15 @@ export default function App() {
   };
 
   const handleUpdateAccountName = async (name: string) => {
-    const updatedUser = await updateAccountName(name);
-    setUser(updatedUser);
+    const normalizedName = name.trim();
+    if (!normalizedName) throw new Error('Enter a name before saving.');
+    localStorage.setItem('leadpebble_profile_name', normalizedName);
+    setUser((currentUser) => ({ ...currentUser, displayName: normalizedName }));
   };
 
   const handleSelectProfileAvatar = (avatarId: string) => {
-    if (!user) return;
     try {
-      storeProfileAvatar(user.uid, avatarId);
+      storeProfileAvatar(LOCAL_USER_ID, avatarId);
       setProfileAvatarId(avatarId);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'Could not save your avatar.');
@@ -639,43 +436,6 @@ export default function App() {
   };
   const HeaderIcon = headerItems[currentTab].icon;
 
-  if (!isAuthReady) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <PebbleLoader message="Checking your account" detail="Connecting securely to LeadPebble" />
-      </main>
-    );
-  }
-
-  if (!user) {
-    return (
-      <SignInView
-        isLoading={false}
-        isSigningIn={isLoggingIn}
-        error={authError}
-        onSignIn={handleLogin}
-      />
-    );
-  }
-
-  if (!hasCompletedFirstRun) {
-    return (
-      <WelcomeView
-        displayName={user.displayName || user.email?.split('@')[0] || ''}
-        locationName={locationName}
-        isLocating={isLocating}
-        error={permissionError}
-        onUseDeviceLocation={handleWelcomeUseDeviceLocation}
-        onContinueWithCurrentLocation={handleWelcomeContinueWithLocation}
-        onContinueWithPreset={(coordinates, selectedLocation) =>
-          finishFirstRun(coordinates, selectedLocation, false, 'preset')
-        }
-        onFinishEntering={handleCompleteFirstRun}
-        defaultCoordinates={COIMBATORE_DEFAULT_HUB.coords}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col lg:flex-row font-sans antialiased">
       
@@ -689,10 +449,6 @@ export default function App() {
         onExportCsv={() => exportLeadsToCsv(leads)}
         user={user}
         avatarId={profileAvatarId}
-        onLogin={handleLogin}
-        onLogout={handleLogout}
-        isLoggingIn={isLoggingIn}
-        authError={authError}
         userLocation={userLocation}
         isGpsLocation={isGpsLocation}
         locationName={locationName}
@@ -858,7 +614,7 @@ export default function App() {
                   userLocation={userLocation}
                   locationName={locationName}
                   distanceFilter={distanceFilter}
-                  userName={user.displayName || user.email?.split('@')[0] || ''}
+                  userName={user.displayName}
                 />
               )}
 
@@ -912,12 +668,9 @@ export default function App() {
                   <AccountSettingsView
                     user={user}
                     avatarId={profileAvatarId}
-                    isSigningOut={isSigningOut}
-                    error={authError}
                     onUpdateName={handleUpdateAccountName}
                     onSelectAvatar={handleSelectProfileAvatar}
                     onShowTutorial={handleShowTutorial}
-                    onSignOut={handleLogout}
                   />
                 </Suspense>
               )}
@@ -978,12 +731,7 @@ export default function App() {
                 <Suspense fallback={<PebbleLoader message="Loading Google Workspace" compact />}>
                   <GoogleWorkspaceHub
                     userToken={userToken}
-                    isAuthenticated={Boolean(user)}
-                    authError={authError}
-                    isAuthorizing={isAuthorizingWorkspace || isLoggingIn}
                     leads={leads}
-                    onPromptLogin={handleLogin}
-                    onAuthorizeWorkspace={handleWorkspaceAuthorization}
                     onSelectLead={(lead) => setSelectedLead(lead)}
                   />
                 </Suspense>
@@ -1001,9 +749,9 @@ export default function App() {
             onClose={() => setSelectedLead(null)}
             onUpdateLead={handleSaveLead}
             userToken={userToken}
-            onPromptLogin={handleLogin}
+            onPromptLogin={handleWorkspaceAuthorization}
             onRequestWorkspaceAccess={handleWorkspaceAuthorization}
-            isAuthorizingWorkspace={isAuthorizingWorkspace || isLoggingIn}
+            isAuthorizingWorkspace={false}
             authError={authError}
             onDraftOutreach={handleDraftOutreach}
           />

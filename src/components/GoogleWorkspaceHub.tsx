@@ -15,23 +15,13 @@ import {
 
 interface GoogleWorkspaceHubProps {
   userToken: string | null;
-  isAuthenticated: boolean;
-  authError: string | null;
-  isAuthorizing: boolean;
   leads: Lead[];
-  onPromptLogin: () => void;
-  onAuthorizeWorkspace: () => void;
   onSelectLead: (lead: Lead) => void;
 }
 
 export function GoogleWorkspaceHub({
   userToken,
-  isAuthenticated,
-  authError,
-  isAuthorizing,
   leads,
-  onPromptLogin,
-  onAuthorizeWorkspace,
   onSelectLead,
 }: GoogleWorkspaceHubProps) {
   const [spaces, setSpaces] = useState<any[]>([]);
@@ -67,8 +57,7 @@ export function GoogleWorkspaceHub({
 
   const handleSendChatAlert = async () => {
     if (!userToken) {
-      if (isAuthenticated) onAuthorizeWorkspace();
-      else onPromptLogin();
+      setSendError('Google Chat requires a separate Google OAuth connection. Company discovery does not.');
       return;
     }
 
@@ -115,8 +104,7 @@ export function GoogleWorkspaceHub({
 
   const handleCreateForm = async () => {
     if (!userToken) {
-      if (isAuthenticated) onAuthorizeWorkspace();
-      else onPromptLogin();
+      setFormError('Google Forms requires a separate Google OAuth connection. Company discovery does not.');
       return;
     }
 
@@ -174,28 +162,9 @@ export function GoogleWorkspaceHub({
         </div>
 
         {!userToken && (
-          <div className="mt-4 p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="text-xs text-indigo-900 dark:text-indigo-200 space-y-0.5">
-              <p className="font-bold">{isAuthenticated ? 'Allow optional Google Workspace access' : 'Connect Google Workspace'}</p>
-              <p>
-                {isAuthenticated
-                  ? 'Grant Chat and Forms permissions only when you choose to use these integrations.'
-                  : 'Sign in first. Chat and Forms permissions are requested separately, only when needed.'}
-              </p>
-            </div>
-            <button
-              onClick={isAuthenticated ? onAuthorizeWorkspace : onPromptLogin}
-              disabled={isAuthorizing}
-              className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition disabled:cursor-wait disabled:opacity-60"
-            >
-              {isAuthorizing
-                ? 'Connecting…'
-                : isAuthenticated
-                  ? 'Grant Chat & Forms access'
-                  : 'Sign in with Google'}
-            </button>
-            {authError && <p role="alert" className="text-xs text-rose-700 dark:text-rose-300">{authError}</p>}
-          </div>
+          <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-5 text-slate-600 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-300">
+            Google Chat and Forms are optional and require a separate Google OAuth connection. Company discovery, saved leads, and CRM do not require sign-in.
+          </p>
         )}
       </div>
 

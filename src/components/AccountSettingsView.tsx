@@ -1,29 +1,23 @@
 import { useEffect, useState } from 'react';
-import type { User } from 'firebase/auth';
-import { BadgeCheck, CalendarDays, Check, CircleHelp, LogOut, Mail, Save, ShieldCheck, UserRound } from 'lucide-react';
+import type { LocalUser } from '../types/localUser.ts';
+import { Check, CircleHelp, Save, UserRound } from 'lucide-react';
 import { ProfileAvatar } from './ProfileAvatar.tsx';
 import { PROFILE_AVATARS } from '../utils/profileAvatars.ts';
 
 interface AccountSettingsViewProps {
-  user: User;
+  user: LocalUser;
   avatarId: string;
-  isSigningOut: boolean;
-  error: string | null;
   onUpdateName: (name: string) => Promise<void>;
   onSelectAvatar: (avatarId: string) => void;
   onShowTutorial: () => void;
-  onSignOut: () => void;
 }
 
 export function AccountSettingsView({
   user,
   avatarId,
-  isSigningOut,
-  error,
   onUpdateName,
   onSelectAvatar,
   onShowTutorial,
-  onSignOut,
 }: AccountSettingsViewProps) {
   const [nameDraft, setNameDraft] = useState(user.displayName || '');
   const [isSavingName, setIsSavingName] = useState(false);
@@ -48,27 +42,9 @@ export function AccountSettingsView({
     }
   };
 
-  const providerNames = user.providerData.map((provider) => {
-    if (provider.providerId === 'google.com') return 'Google';
-    return provider.providerId;
-  });
-
   const details = [
-    { label: 'Name', value: user.displayName || 'Not provided', icon: UserRound },
-    { label: 'Email', value: user.email || 'Not provided', icon: Mail },
-    { label: 'Sign-in method', value: providerNames.join(', ') || 'Firebase', icon: ShieldCheck },
-    {
-      label: 'Email verification',
-      value: user.emailVerified ? 'Verified by Google' : 'Not verified',
-      icon: BadgeCheck,
-    },
-    {
-      label: 'Account created',
-      value: user.metadata.creationTime
-        ? new Date(user.metadata.creationTime).toLocaleDateString()
-        : 'Not available',
-      icon: CalendarDays,
-    },
+    { label: 'Workspace', value: 'This browser', icon: UserRound },
+    { label: 'Saved companies', value: 'Stored only in this browser', icon: Save },
   ];
 
   return (
@@ -79,7 +55,7 @@ export function AccountSettingsView({
         </p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Account settings</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-          Update the name shown in LeadPebble and choose a business-themed avatar for this browser.
+          Update your local profile and choose a business-themed avatar. No account or sign-in is required.
         </p>
       </div>
 
@@ -88,9 +64,9 @@ export function AccountSettingsView({
           <ProfileAvatar avatarId={avatarId} name={user.displayName} sizeClassName="h-14 w-14" />
           <div className="min-w-0">
             <p className="truncate text-lg font-semibold text-slate-900 dark:text-white">
-              {user.displayName || user.email || 'Google account'}
+              {user.displayName || 'My workspace'}
             </p>
-            <p className="truncate text-sm text-slate-500 dark:text-slate-400">{user.email || 'Email not provided'}</p>
+            <p className="truncate text-sm text-slate-500 dark:text-slate-400">LeadPebble local profile</p>
           </div>
         </div>
 
@@ -194,20 +170,9 @@ export function AccountSettingsView({
         </div>
 
         <div className="border-t border-slate-100 p-6 dark:border-slate-800">
-          {error && (
-            <p role="alert" className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200">
-              {error}
-            </p>
-          )}
-          <button
-            type="button"
-            onClick={onSignOut}
-            disabled={isSigningOut}
-            className="inline-flex items-center gap-2 rounded-lg border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-wait disabled:opacity-60 dark:border-rose-900 dark:text-rose-300 dark:hover:bg-rose-950/40"
-          >
-            <LogOut className="h-4 w-4" />
-            {isSigningOut ? 'Signing out…' : 'Sign out of LeadPebble'}
-          </button>
+          <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
+            Companies and profile preferences stay on this device and browser. They are not synced to other devices.
+          </p>
         </div>
       </div>
     </section>

@@ -14,13 +14,11 @@ import {
   Radio,
   X,
   ChevronRight,
-  LogOut,
-  LogIn,
   Mail,
   Settings,
 } from 'lucide-react';
 import type { Lead } from '../utils/leadScoring.ts';
-import type { User } from 'firebase/auth';
+import type { LocalUser } from '../types/localUser.ts';
 import { ProfileAvatar } from './ProfileAvatar.tsx';
 import {
   INDUSTRIAL_HUBS_PRESETS,
@@ -37,12 +35,8 @@ interface SidebarProps {
   isDark: boolean;
   onToggleTheme: () => void;
   onExportCsv: () => void;
-  user: User | null;
+  user: LocalUser;
   avatarId: string;
-  onLogin: () => void;
-  onLogout: () => void;
-  isLoggingIn: boolean;
-  authError?: string | null;
   userLocation: GeoCoordinates | null;
   isGpsLocation: boolean;
   locationName: string;
@@ -63,10 +57,6 @@ export function Sidebar({
   onExportCsv,
   user,
   avatarId,
-  onLogin,
-  onLogout,
-  isLoggingIn,
-  authError,
   userLocation: _userLocation,
   isGpsLocation,
   locationName,
@@ -93,7 +83,7 @@ export function Sidebar({
     {
       id: 'discovery',
       label: 'Company Directory',
-      sublabel: 'Grounded search results',
+      sublabel: 'Google Places results',
       icon: Building2,
       badge: leads.length,
       badgeStyle: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
@@ -144,7 +134,7 @@ export function Sidebar({
     {
       id: 'settings',
       label: 'Account Settings',
-      sublabel: 'Profile & sign-in',
+      sublabel: 'Local profile',
       icon: Settings,
     },
   ];
@@ -341,38 +331,12 @@ export function Sidebar({
 
         {/* Theme and User Profile */}
         <div className="flex items-center justify-between pt-1">
-          {user ? (
-            <div className="flex items-center gap-2 min-w-0">
-              <ProfileAvatar avatarId={avatarId} name={user.displayName} sizeClassName="h-7 w-7" />
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">
-                  {user.displayName || user.email?.split('@')[0] || 'Logged In'}
-                </p>
-                <button
-                  onClick={onLogout}
-                  className="text-[10px] text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 font-semibold"
-                >
-                  <LogOut className="w-2.5 h-2.5" /> Sign Out
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="min-w-0">
-              <button
-                onClick={onLogin}
-                disabled={isLoggingIn}
-                className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-60"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                {isLoggingIn ? 'Connecting to Google...' : 'Sign in with Google'}
-              </button>
-              {authError && (
-                <p role="alert" className="mt-1 max-w-44 text-[10px] leading-4 text-rose-600 dark:text-rose-400">
-                  {authError}
-                </p>
-              )}
-            </div>
-          )}
+          <div className="flex min-w-0 items-center gap-2">
+            <ProfileAvatar avatarId={avatarId} name={user.displayName} sizeClassName="h-7 w-7" />
+            <p className="truncate text-[11px] font-bold text-slate-800 dark:text-slate-200">
+              {user.displayName}
+            </p>
+          </div>
 
           {/* Theme switch button */}
           <button

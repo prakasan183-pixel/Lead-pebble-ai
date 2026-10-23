@@ -1,5 +1,5 @@
 import React from 'react';
-import type { User } from 'firebase/auth';
+import type { LocalUser } from '../types/localUser.ts';
 import {
   Building2,
   MapPin,
@@ -15,7 +15,7 @@ import {
 import type { NavTab } from './Sidebar.tsx';
 
 interface NavbarProps {
-  user: User | null;
+  user: LocalUser | null;
   onLogin: () => void;
   onLogout: () => void;
   isLoggingIn: boolean;

@@ -4,8 +4,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
-import { getAllLeads, saveLead, batchSaveLeads, deleteLead } from './src/server/db.ts';
-import { firebaseAuth } from './src/server/firebaseAdmin.ts';
 import {
   deduplicateLeads,
   type Lead,
@@ -55,22 +53,6 @@ const PORT = portValue;
 app.use(express.json({ limit: '10mb' }));
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
-});
-
-app.use('/api', async (req, res, next) => {
-  const idToken = req.get('X-Firebase-ID-Token');
-  if (!idToken) {
-    return res.status(401).json({ success: false, error: 'Authentication is required.' });
-  }
-
-  try {
-    const decodedToken = await firebaseAuth.verifyIdToken(idToken);
-    res.locals.userId = decodedToken.uid;
-    return next();
-  } catch (error) {
-    console.warn('Rejected API request with an invalid Firebase ID token.');
-    return res.status(401).json({ success: false, error: 'Your sign-in session is invalid or expired.' });
-  }
 });
 
 // Initialize Google GenAI client
@@ -130,60 +112,7 @@ async function mapWithConcurrency<T, R>(
 // API ROUTES
 // ==========================================
 
-// 1. Get all saved leads from CRM
-app.get('/api/leads/saved', async (_req, res) => {
-  try {
-    const leads = await getAllLeads(res.locals.userId);
-    res.json({ success: true, leads });
-  } catch (error: any) {
-    console.error('Error fetching saved leads:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// 2. Save or update a single lead
-app.post('/api/leads/save', async (req, res) => {
-  try {
-    const lead = req.body?.lead || req.body;
-    if (!lead || !lead.id || !lead.companyName) {
-      return res.status(400).json({ success: false, error: 'Invalid lead data' });
-    }
-    const saved = await saveLead(res.locals.userId, lead);
-    res.json({ success: true, lead: saved });
-  } catch (error: any) {
-    console.error('Error saving lead:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// 3. Batch save leads to CRM
-app.post('/api/leads/batch-save', async (req, res) => {
-  try {
-    const { leads } = req.body;
-    if (!Array.isArray(leads)) {
-      return res.status(400).json({ success: false, error: 'Expected leads array' });
-    }
-    const saved = await batchSaveLeads(res.locals.userId, leads);
-    res.json({ success: true, count: saved.length, leads: saved });
-  } catch (error: any) {
-    console.error('Error batch saving leads:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// 4. Delete lead from CRM
-app.delete('/api/leads/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const deleted = await deleteLead(res.locals.userId, id);
-    res.json({ success: true, deleted });
-  } catch (error: any) {
-    console.error('Error deleting lead:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// 4.1 Reverse Geocode Live Location to City/State
+// Reverse Geocode Live Location to City/State
 app.all('/api/location/reverse-geocode', async (req, res) => {
   try {
     const rawLat = req.method === 'GET' ? req.query.lat : req.body?.lat;
@@ -454,13 +383,13 @@ app.post('/api/leads/discover', async (req, res) => {
     if (!locationQuery) {
       return res.status(400).json({ success: false, error: 'A search location is required' });
     }
-    const mapsKey = cleanMapsKey(
-      process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY
-    );
+    const mapsKey = cleanMapsKey(process.env.GOOGLE_MAPS_API_KEY);
     if (!mapsKey) {
       return res.status(500).json({
         success: false,
-        error: 'Company search is unavailable: configure GOOGLE_MAPS_API_KEY on the server and restart it.',
+        error: process.env.VERCEL
+          ? 'Company search is unavailable. Add the server-side GOOGLE_MAPS_API_KEY in Vercel, enable Google Places API (New), and redeploy.'
+          : 'Company search is unavailable: configure GOOGLE_MAPS_API_KEY on the server and restart it.',
       });
     }
 
@@ -1191,6 +1120,10 @@ app.post('/api/workspace/forms/create-intake', async (req, res) => {
   }
 });
 
+app.use('/api', (_req, res) => {
+  res.status(404).json({ success: false, error: 'API endpoint not found.' });
+});
+
 // ==========================================
 // VITE DEV SERVER / STATIC ASSETS
 // ==========================================
@@ -1219,9 +1152,6 @@ async function startServer() {
         }
       },
     }));
-    app.use('/api', (_req, res) => {
-      res.status(404).json({ error: 'API endpoint not found.' });
-    });
     app.get('*', (req, res) => {
       res.sendFile(indexFile);
     });
