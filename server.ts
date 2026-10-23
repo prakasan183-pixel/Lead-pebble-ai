@@ -500,7 +500,7 @@ app.post('/api/leads/discover', async (req, res) => {
     const searchResults = await Promise.all(queryTerms.map(async (queryTerm) => {
       const queryPlaces: GooglePlaceResult[] = [];
       let pageToken: string | undefined;
-      const maxPages = queryCategory === 'All Categories' ? 1 : 3;
+      const maxPages = 3;
       for (let page = 0; page < maxPages; page += 1) {
         const requestBody: Record<string, unknown> = {
           textQuery: /^near\s+-?\d/i.test(locationQuery)
