@@ -682,11 +682,11 @@ app.post('/api/ai/outreach', async (req, res) => {
     if (!lead || typeof lead.companyName !== 'string' || !lead.companyName.trim() || lead.companyName.trim().toLowerCase() === 'unknown') {
       return res.status(400).json({ success: false, error: 'Lead details required' });
     }
-    const openAiKey = process.env.OPENAI_API_KEY?.trim();
-    if (!openAiKey || /paste-your-openai-api-key-here|your-openai-api-key/i.test(openAiKey)) {
+    const deepSeekKey = process.env.DEEPSEEK_API_KEY?.trim();
+    if (!deepSeekKey || /paste-your-deepseek-api-key-here|your-deepseek-api-key/i.test(deepSeekKey)) {
       return res.status(500).json({
         success: false,
-        error: 'Outreach drafting is not configured. Add OPENAI_API_KEY to the server .env file and restart the server.',
+        error: 'Outreach drafting is not configured. Add DEEPSEEK_API_KEY to the server environment and redeploy or restart the server.',
       });
     }
 
@@ -699,14 +699,14 @@ Optional sender offer: ${JSON.stringify(offer)}
 Return one JSON object with exactly these keys and types:
 {"headline":string,"industryInsight":string,"emailPitch":{"subjectOptions":[string,string,string],"body":string,"followUpSnippet":string},"linkedInOutreach":{"connectionNote":string,"inMailMessage":{"subject":string,"body":string},"followUpMessage":string},"whatsappMessage":string,"coldCallScript":{"opener":string,"theHook":string,"pitch":string,"objectionRebuttals":[{"objection":string,"response":string}],"objectionRebuttal":string,"callToAction":string},"commercialAuditSummary":string}`;
 
-    const openAiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const deepSeekResponse = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${openAiKey}`,
+        Authorization: `Bearer ${deepSeekKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'deepseek-chat',
         temperature: 0.3,
         response_format: { type: 'json_object' },
         messages: [
@@ -716,7 +716,7 @@ Return one JSON object with exactly these keys and types:
       }),
       signal: AbortSignal.timeout(30000),
     });
-    const result = await openAiResponse.json() as {
+    const result = await deepSeekResponse.json() as {
       choices?: Array<{ message?: { content?: string | null } }>;
       error?: {
         code?: string;
@@ -724,41 +724,34 @@ Return one JSON object with exactly these keys and types:
         message?: string;
       };
     };
-    if (!openAiResponse.ok) {
+    if (!deepSeekResponse.ok) {
       const providerCode = result.error?.code || result.error?.type || 'unknown';
-      console.error('OpenAI outreach request failed:', openAiResponse.status, providerCode);
-      const status = openAiResponse.status === 401 ? 502 : openAiResponse.status === 429 ? 503 : 502;
-      const isInsufficientQuota =
-        providerCode === 'insufficient_quota' ||
-        providerCode === 'billing_hard_limit_reached' ||
-        result.error?.type === 'insufficient_quota' ||
-        /insufficient_quota|exceeded your current quota|billing hard limit/i.test(result.error?.message || '');
-      const error = openAiResponse.status === 401
-        ? 'OpenAI rejected this API key. Confirm OPENAI_API_KEY belongs to the intended OpenAI API project, then restart the server.'
-        : openAiResponse.status === 429 && isInsufficientQuota
-          ? 'This OpenAI API project has no available API credits or has reached its spending limit. ChatGPT Free does not include OpenAI API credits; API billing is separate. Check API billing, project budget, and usage.'
-          : openAiResponse.status === 429
-            ? 'The OpenAI API rate limit was reached. Wait briefly before retrying, or review the project rate limits.'
-            : openAiResponse.status === 403
-              ? 'The OpenAI API project does not have permission to use the requested model. Check project access and model availability.'
-              : 'OpenAI outreach drafting failed. Check the API project, server logs, and OpenAI service status.';
+      console.error('DeepSeek outreach request failed:', deepSeekResponse.status, providerCode);
+      const status = deepSeekResponse.status === 429 ? 503 : 502;
+      const error = deepSeekResponse.status === 401
+        ? 'DeepSeek rejected the API key. Check the DEEPSEEK_API_KEY configured on the server.'
+        : deepSeekResponse.status === 429
+          ? 'DeepSeek rate limit or balance limit reached. Check your DeepSeek account balance and usage, then retry.'
+          : deepSeekResponse.status === 403
+            ? 'DeepSeek denied this request. Check API access and account status.'
+            : 'DeepSeek outreach drafting failed. Check the API key, account balance, and DeepSeek service status.';
       return res.status(status).json({ success: false, error });
     }
 
     const content = result.choices?.[0]?.message?.content;
     if (!content) {
-      return res.status(502).json({ success: false, error: 'OpenAI returned an empty outreach draft.' });
+      return res.status(502).json({ success: false, error: 'DeepSeek returned an empty outreach draft.' });
     }
     let outreach: unknown;
     try {
       outreach = JSON.parse(content);
     } catch {
-      return res.status(502).json({ success: false, error: 'OpenAI returned an invalid outreach response.' });
+      return res.status(502).json({ success: false, error: 'DeepSeek returned an invalid outreach response.' });
     }
     return res.json({ success: true, outreach });
   } catch (error: any) {
     console.error('Error generating outreach:', error?.name || 'unknown error');
-    res.status(502).json({ success: false, error: 'Could not reach OpenAI for outreach drafting. Check your network and try again.' });
+    res.status(502).json({ success: false, error: 'Could not reach DeepSeek for outreach drafting. Check your network and try again.' });
   }
 });
 
