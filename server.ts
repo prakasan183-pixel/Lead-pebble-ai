@@ -727,11 +727,13 @@ Return one JSON object with exactly these keys and types:
     if (!deepSeekResponse.ok) {
       const providerCode = result.error?.code || result.error?.type || 'unknown';
       console.error('DeepSeek outreach request failed:', deepSeekResponse.status, providerCode);
-      const status = deepSeekResponse.status === 429 ? 503 : 502;
+      const status = deepSeekResponse.status === 429 ? 503 : deepSeekResponse.status === 402 ? 402 : 502;
       const error = deepSeekResponse.status === 401
         ? 'DeepSeek rejected the API key. Check the DEEPSEEK_API_KEY configured on the server.'
         : deepSeekResponse.status === 429
           ? 'DeepSeek rate limit or balance limit reached. Check your DeepSeek account balance and usage, then retry.'
+          : deepSeekResponse.status === 402
+            ? 'DeepSeek requires an available account balance for this request. Add balance to the DeepSeek account for this API key, then retry.'
           : deepSeekResponse.status === 403
             ? 'DeepSeek denied this request. Check API access and account status.'
             : 'DeepSeek outreach drafting failed. Check the API key, account balance, and DeepSeek service status.';
