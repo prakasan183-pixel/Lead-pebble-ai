@@ -67,33 +67,32 @@ export function OutreachTemplateGenerator({
   const [connectionNote, setConnectionNote] = useState<string>('');
   const [inMailBody, setInMailBody] = useState<string>('');
 
+  const clearDraft = () => {
+    setOutreachData(null);
+    setGenerationError(null);
+    setIsSavedToCrm(false);
+    setSelectedSubject('');
+    setEmailBody('');
+    setConnectionNote('');
+    setInMailBody('');
+  };
+
   // Update currentLead if selectedLeadId prop changes from outside
   useEffect(() => {
     if (selectedLeadId) {
       const found = leads.find((l) => l.id === selectedLeadId);
-      if (found) {
+      if (found && found.id !== currentLead?.id) {
+        clearDraft();
         setCurrentLead(found);
       }
     }
-  }, [selectedLeadId, leads]);
-
-  // When currentLead changes, trigger generation or reset
-  useEffect(() => {
-    if (currentLead) {
-      handleGenerate();
-    }
-  }, [currentLead?.id]);
+  }, [selectedLeadId, leads, currentLead?.id]);
 
   const handleGenerate = async () => {
     if (!currentLead) return;
     setIsLoading(true);
     setGenerationError(null);
     setIsSavedToCrm(false);
-    setOutreachData(null);
-    setSelectedSubject('');
-    setEmailBody('');
-    setConnectionNote('');
-    setInMailBody('');
 
     try {
       const res = await apiFetch('/api/ai/outreach', {
@@ -269,8 +268,12 @@ Closing CTA: ${outreachData.coldCallScript?.callToAction}
               disabled={isLoading || !currentLead}
               className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>{isLoading ? 'Generating...' : 'Re-Generate with Groq'}</span>
+              {outreachData
+                ? <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                : <Sparkles className={`w-3.5 h-3.5 ${isLoading ? 'animate-pulse' : ''}`} />}
+              <span>
+                {isLoading ? 'Generating...' : outreachData ? 'Re-Generate Draft' : 'Create Draft'}
+              </span>
             </button>
           </div>
         </div>
@@ -325,6 +328,7 @@ Closing CTA: ${outreachData.coldCallScript?.callToAction}
                       <button
                         key={lead.id}
                         onClick={() => {
+                          if (lead.id !== currentLead?.id) clearDraft();
                           setCurrentLead(lead);
                           onSelectLead(lead);
                           setIsDropdownOpen(false);
@@ -357,7 +361,7 @@ Closing CTA: ${outreachData.coldCallScript?.callToAction}
 
             {/* Selected Prospect Details Snapshot Card */}
             {currentLead && (
-              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850 p-4 space-y-3">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800 p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="font-bold text-sm text-slate-900 dark:text-white">
@@ -461,6 +465,25 @@ Closing CTA: ${outreachData.coldCallScript?.callToAction}
                     <Check className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Saved to Lead CRM Notes!</span>
                   </>
+                ) : !outreachData ? (
+                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
+                    <Sparkles className="mx-auto h-8 w-8 text-blue-500" />
+                    <h3 className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">
+                      Your outreach draft is ready when you are
+                    </h3>
+                    <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                      Choose a prospect and create a draft when you’re ready. No draft will be generated until you ask.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleGenerate}
+                      disabled={!currentLead || isLoading}
+                      className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Create Draft
+                    </button>
+                  </div>
                 ) : (
                   <>
                     <Bookmark className="w-3.5 h-3.5" />
@@ -642,13 +665,13 @@ Closing CTA: ${outreachData.coldCallScript?.callToAction}
                       value={emailBody}
                       onChange={(e) => setEmailBody(e.target.value)}
                       rows={11}
-                      className="w-full p-3.5 rounded-xl text-xs sm:text-sm font-sans leading-relaxed bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
+                      className="w-full p-3.5 rounded-xl text-xs sm:text-sm font-sans leading-relaxed bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                     />
                   </div>
 
                   {/* 3-Day Follow-Up Snippet */}
                   {outreachData?.emailPitch?.followUpSnippet && (
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850 space-y-1.5">
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
                           ⏱️ 3-Day Follow-Up Snippet
@@ -755,13 +778,13 @@ Closing CTA: ${outreachData.coldCallScript?.callToAction}
                       value={inMailBody}
                       onChange={(e) => setInMailBody(e.target.value)}
                       rows={7}
-                      className="w-full p-3 rounded-xl text-xs sm:text-sm font-sans leading-relaxed bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
+                      className="w-full p-3 rounded-xl text-xs sm:text-sm font-sans leading-relaxed bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                     />
                   </div>
 
                   {/* 3. Post-Connection Follow-up */}
                   {outreachData?.linkedInOutreach?.followUpMessage && (
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850 space-y-1.5">
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                           3. Post-Connection Accepted Message
@@ -843,7 +866,7 @@ Closing CTA: ${outreachData.coldCallScript?.callToAction}
                   </div>
 
                   <div className="space-y-3">
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-850">
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800">
                       <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">
                         1. Phone Opener
                       </span>
@@ -852,7 +875,7 @@ Closing CTA: ${outreachData.coldCallScript?.callToAction}
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-850">
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800">
                       <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">
                         2. Discussion Prompt
                       </span>
@@ -861,7 +884,7 @@ Closing CTA: ${outreachData.coldCallScript?.callToAction}
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-850">
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800">
                       <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
                         3. Objection: "We get enough work through brokers & word-of-mouth"
                       </span>
@@ -870,7 +893,7 @@ Closing CTA: ${outreachData.coldCallScript?.callToAction}
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-850">
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800">
                       <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
                         4. Closing Call-To-Action (5-Minute Screen Share)
                       </span>

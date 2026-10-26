@@ -148,7 +148,7 @@ export function Sidebar({
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
       
       {/* 1. Header & Brand */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <div className="sidebar-brand p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fuchsia-100 to-cyan-100 dark:from-fuchsia-950/60 dark:to-cyan-950/60 flex items-center justify-center shadow-xs">
             <img src="/leadpebble-logo.png" alt="LeadPebble" className="w-9 h-9 object-contain" />
@@ -158,12 +158,9 @@ export function Sidebar({
               <span className="font-bold text-base text-slate-900 dark:text-white tracking-tight">
                 LeadPebble
               </span>
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
-                B2B CRM
-              </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {locationName} Company Directory
+              Find. Connect. Grow.
             </p>
           </div>
         </div>
@@ -179,7 +176,7 @@ export function Sidebar({
       </div>
 
       {/* 2. Current Location & Live GPS Status Card */}
-      <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50">
+      <div className="sidebar-location p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50">
         <div className="p-3 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 shadow-xs space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
@@ -230,7 +227,7 @@ export function Sidebar({
       </div>
 
       {/* 3. Navigation Links */}
-      <nav className="flex-1 overflow-y-auto p-3 space-y-1.5">
+      <nav className="sidebar-navigation flex-1 overflow-y-auto p-3 space-y-1.5">
         <div className="px-2 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
           Main Navigation
         </div>
@@ -318,7 +315,7 @@ export function Sidebar({
       </nav>
 
       {/* 5. Footer & User Controls */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-2 bg-slate-50/50 dark:bg-slate-950/40">
+      <div className="sidebar-footer p-3 border-t border-slate-200 dark:border-slate-800 space-y-2 bg-slate-50/50 dark:bg-slate-950/40">
         
         {/* Export CSV Button */}
         <button
@@ -356,7 +353,7 @@ export function Sidebar({
   return (
     <>
       {/* Desktop Sticky Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 xl:w-72 lg:shrink-0 lg:h-screen lg:sticky lg:top-0 z-30 shadow-xs">
+      <aside className="app-sidebar hidden lg:flex lg:flex-col lg:w-[266px] xl:w-[266px] lg:shrink-0 lg:h-screen lg:sticky lg:top-0 z-30 shadow-xs">
         {sidebarContent}
       </aside>
 

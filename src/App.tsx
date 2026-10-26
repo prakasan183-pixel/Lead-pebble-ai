@@ -65,6 +65,40 @@ const AccountSettingsView = lazy(() =>
   import('./components/AccountSettingsView.tsx').then((module) => ({ default: module.AccountSettingsView }))
 );
 
+class MapViewErrorBoundary extends React.Component<
+  React.PropsWithChildren,
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('Unable to load Live Map view:', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+          <p className="font-semibold">The Live Map failed to load.</p>
+          <p className="mt-1">Reload the app to retry loading the map module.</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-3 rounded-lg bg-amber-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-800"
+          >
+            Reload app
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 async function resolveLocationName(coords: GeoCoordinates): Promise<string> {
   try {
     const response = await apiFetch(
@@ -437,7 +471,7 @@ export default function App() {
   const HeaderIcon = headerItems[currentTab].icon;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col lg:flex-row font-sans antialiased">
+    <div className="min-h-screen bg-[#f7f9fc] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col lg:flex-row font-sans antialiased">
       
       {/* 1. SIDEBAR (Navbar on side, not on top) */}
       <Sidebar
@@ -464,7 +498,7 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* Top Header Bar */}
-        <header className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-200 bg-white/95 px-3 py-2.5 shadow-xs backdrop-blur-xs dark:border-slate-800 dark:bg-slate-900/95 sm:flex-nowrap sm:px-6 sm:py-3">
+        <header className="app-topbar sticky top-0 z-20 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-200 bg-white/95 px-3 py-2.5 shadow-xs backdrop-blur-xs dark:border-slate-800 dark:bg-slate-900/95 sm:flex-nowrap sm:px-6 sm:py-3">
           
           <div className="flex items-center gap-3 min-w-0">
             {/* Mobile Hamburger Button to open side navbar */}
@@ -590,7 +624,7 @@ export default function App() {
         )}
 
         {/* Content Container */}
-        <main className="flex-1 space-y-5 p-3 sm:space-y-6 sm:p-6 lg:p-8">
+        <main className="flex-1 space-y-5 p-3 sm:space-y-4 sm:p-4 lg:p-3">
           {isLoadingLeads ? (
             <div className="py-20">
               <PebbleLoader
@@ -700,15 +734,17 @@ export default function App() {
                   </div>
 
                   <div className="h-[55vh] min-h-[360px] w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 sm:h-[650px]">
-                    <Suspense fallback={<PebbleLoader message="Loading company map" compact />}>
-                      <LeadMapView
-                        leads={leads}
-                        userLocation={userLocation}
-                        onSelectLead={(lead) => setSelectedLead(lead)}
-                        onRequestUserLocation={handleToggleLiveGps}
-                        isLocating={isLocating}
-                      />
-                    </Suspense>
+                    <MapViewErrorBoundary>
+                      <Suspense fallback={<PebbleLoader message="Loading company map" compact />}>
+                        <LeadMapView
+                          leads={leads}
+                          userLocation={userLocation}
+                          onSelectLead={(lead) => setSelectedLead(lead)}
+                          onRequestUserLocation={handleToggleLiveGps}
+                          isLocating={isLocating}
+                        />
+                      </Suspense>
+                    </MapViewErrorBoundary>
                   </div>
                 </div>
               )}

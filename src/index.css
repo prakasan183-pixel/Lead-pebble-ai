@@ -3,6 +3,538 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+body {
+  background: #f7f9fc;
+}
+
+.app-sidebar {
+  box-shadow: 1px 0 8px rgb(24 48 86 / 3%);
+}
+
+.sidebar-brand {
+  min-height: 76px;
+  padding: 16px 20px;
+  background: #fff;
+}
+
+.sidebar-brand > div:first-child {
+  gap: 11px;
+}
+
+.sidebar-brand > div:first-child > div:first-child {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #dfe9ff, #f0e9ff);
+}
+
+.sidebar-brand > div:first-child > div:first-child img {
+  width: 32px;
+  height: 32px;
+}
+
+.sidebar-brand p {
+  margin-top: 1px;
+  color: #6880a8;
+  letter-spacing: .01em;
+}
+
+.sidebar-location {
+  padding: 10px 16px;
+  background: #fff;
+}
+
+.sidebar-location > div {
+  padding: 10px;
+  border-color: #edf1f7;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+.sidebar-navigation {
+  padding: 14px 10px;
+  background: #fff;
+}
+
+.sidebar-navigation > div:first-child {
+  display: none;
+}
+
+.sidebar-navigation > button {
+  min-height: 39px;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.sidebar-navigation > button > div:first-child {
+  flex: 1 1 auto;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sidebar-navigation > button > div:first-child > div {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+}
+
+.sidebar-navigation > button > div:first-child > div:last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sidebar-navigation > button > div:first-child > div svg {
+  width: 17px;
+  height: 17px;
+}
+
+.sidebar-navigation > button p:first-child {
+  overflow: visible;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.sidebar-navigation > button p:nth-child(2) {
+  display: none;
+}
+
+.sidebar-navigation > button:has(> div:first-child > div) {
+  color: #3e587d;
+}
+
+.sidebar-navigation > button.bg-blue-600 {
+  color: #2463eb;
+  background: #e8efff;
+  box-shadow: inset 3px 0 #3478f6;
+}
+
+.sidebar-navigation > button.bg-blue-600 > div:first-child > div {
+  color: #2463eb;
+  background: transparent;
+}
+
+.sidebar-navigation > button.bg-blue-600 > span {
+  color: #2463eb;
+  background: #d8e5ff;
+}
+
+.sidebar-navigation > div.pt-4 button > span:first-child {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.sidebar-navigation > div.pt-4 {
+  padding-top: 13px;
+}
+
+.sidebar-navigation > div.pt-4 > div:first-child {
+  padding-left: 10px;
+}
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-color: #edf1f7;
+  background: #fff;
+}
+
+.sidebar-footer > button:first-child {
+  display: none;
+}
+
+.app-topbar {
+  min-height: 68px;
+  padding: 10px 18px;
+  border-color: #e9eef6;
+  box-shadow: 0 1px 5px rgb(28 54 94 / 3%);
+}
+
+.app-topbar > div:first-child h1 {
+  color: #19325a;
+}
+
+.app-topbar > div:first-child p {
+  color: #7b8eac;
+}
+
+.app-topbar [data-tour="location"] {
+  background: #f9fbff;
+  border-color: #e8eef7;
+  color: #304b72;
+}
+
+.app-topbar [data-tour="location"] > svg {
+  color: #304b72;
+}
+
+.app-topbar > div:last-child > div {
+  background: #f9fbff;
+  border-color: #e8eef7;
+}
+
+.directory-view {
+  gap: 7px;
+}
+
+.directory-hero {
+  min-height: 105px;
+  border-color: #e4ebf7;
+  border-radius: 11px;
+  background: linear-gradient(100deg, #f3f7ff 0%, #f9fbff 70%, #f5f8ff 100%);
+  padding: 14px 20px;
+  box-shadow: none;
+}
+
+.directory-hero h2 {
+  color: #17325c;
+  font-size: 18px;
+}
+
+.directory-hero .directory-hero-label {
+  color: #5365f7;
+  font-size: 11px;
+  letter-spacing: .015em;
+  text-transform: none;
+}
+
+.directory-hero .directory-hero-icon {
+  height: 58px;
+  width: 58px;
+  border: 0;
+  border-radius: 13px;
+  background: #e1eaff;
+  color: #4d49dc;
+  box-shadow: none;
+}
+
+.directory-hero .directory-hero-subtitle {
+  color: #7084a6;
+}
+
+.directory-hero .directory-process {
+  color: #64799d;
+}
+
+.directory-hero .directory-process > span:first-child > span {
+  background: #3478f6;
+  box-shadow: 0 0 0 4px #e4edff;
+}
+
+.directory-hero .directory-clock {
+  min-width: 138px;
+  justify-content: center;
+  border-color: #e8eef8;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.directory-controls {
+  padding: 10px 13px;
+  border-color: #e7edf6;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgb(24 48 86 / 3%);
+}
+
+.directory-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.directory-search-row > :first-child {
+  flex: 1 1 43%;
+  min-width: 180px;
+}
+
+.directory-search-row > label {
+  flex: 1 1 26%;
+  min-width: 185px;
+}
+
+.directory-search-row input {
+  height: 34px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  border-color: #e1e8f2;
+  border-radius: 7px;
+  background: #fff;
+  font-size: 11px;
+  box-shadow: none;
+}
+
+.directory-search-row > button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  border-radius: 7px;
+  background: #3478f6;
+  padding: 7px 15px;
+  font-size: 11px;
+}
+
+.directory-location-note {
+  margin-top: 4px;
+  color: #8092ae;
+  font-size: 10px;
+}
+
+.directory-controls .directory-filter-row {
+  padding-top: 7px;
+  border-color: #eef2f8;
+}
+
+.directory-controls .directory-filter-row button,
+.directory-controls [data-tour="categories"] button {
+  border-radius: 16px;
+  padding: 5px 12px;
+  font-size: 10px;
+}
+
+.directory-controls [data-tour="categories"] button {
+  border: 1px solid #e5ebf4;
+  background: #f9fbfe;
+  color: #657997;
+}
+
+.directory-controls [data-tour="categories"] button.bg-blue-600 {
+  border-color: #26456f;
+  background: #26456f;
+  color: #fff;
+}
+
+.directory-controls .directory-category-row {
+  padding-top: 7px;
+}
+
+.directory-results-label {
+  margin: 0 0 5px;
+  color: #52698d;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.directory-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.directory-company-card {
+  display: grid;
+  grid-template-columns: minmax(270px, 1.8fr) minmax(170px, 1fr) minmax(160px, .95fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 98px;
+  padding: 10px 13px;
+  border: 1px solid #e5edf7;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgb(27 58 100 / 4%);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.directory-company-card:hover {
+  border-color: #cbdcf5;
+  box-shadow: 0 4px 12px rgb(27 58 100 / 7%);
+}
+
+.directory-company-identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.directory-company-monogram {
+  display: flex;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #e5edff;
+  color: #3268cc;
+  font-size: 19px;
+  font-weight: 750;
+}
+
+.directory-company-name {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: #172f57;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.directory-company-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.directory-company-meta > span {
+  max-width: 100%;
+  border-radius: 9px;
+  padding: 2px 7px;
+  background: #f0f4fa;
+  color: #637999;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.directory-company-meta .directory-verified {
+  background: #e6f7ef;
+  color: #168657;
+}
+
+.directory-company-description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 4px;
+  color: #8192ac;
+  font-size: 10px;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.directory-company-contact,
+.directory-company-status {
+  display: flex;
+  min-height: 60px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  border-left: 1px solid #edf1f7;
+  padding-left: 14px;
+  color: #617896;
+  font-size: 10px;
+}
+
+.directory-company-contact a {
+  overflow: hidden;
+  color: #276cda;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.directory-company-contact .directory-compact-line,
+.directory-company-status .directory-compact-line {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.directory-company-contact svg,
+.directory-company-status svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+}
+
+.directory-company-status > span:first-child {
+  color: #8293ad;
+  font-size: 10px;
+}
+
+.directory-company-status .directory-rating {
+  color: #344d72;
+}
+
+.directory-company-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.directory-company-actions > a,
+.directory-company-actions > button {
+  display: inline-flex;
+  min-width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #e7edf6;
+  border-radius: 7px;
+  background: #fff;
+  color: #536a8b;
+  padding: 0 8px;
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.directory-company-actions > button.directory-details {
+  min-width: 88px;
+  border-color: #e3ebf6;
+  background: #f8faff;
+  color: #203c65;
+}
+
+.directory-company-actions > a:hover,
+.directory-company-actions > button:hover {
+  border-color: #b8cff4;
+  background: #f4f8ff;
+  color: #2868cf;
+}
+
+@media (max-width: 900px) {
+  .directory-company-card {
+    grid-template-columns: minmax(0, 1fr) minmax(135px, .7fr);
+  }
+
+  .directory-company-contact,
+  .directory-company-status {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .directory-company-actions {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 600px) {
+  .directory-search-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .directory-search-row > :first-child,
+  .directory-search-row > label {
+    min-width: 0;
+  }
+
+  .directory-company-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .directory-company-contact,
+  .directory-company-status {
+    min-height: auto;
+  }
+
+  .directory-company-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .directory-hero .directory-process,
+  .directory-hero .directory-clock {
+    display: none;
+  }
+}
+
 .dark {
   color-scheme: dark;
   background-color: #090a0b;
@@ -133,5 +665,249 @@
   .welcome-color-wash,
   .tutorial-pointer {
     animation: none;
+  }
+}
+
+.dark body {
+  background: #090a0b;
+}
+
+.dark .app-sidebar,
+.dark .sidebar-brand,
+.dark .sidebar-location,
+.dark .sidebar-navigation,
+.dark .sidebar-footer {
+  background: #111214;
+  border-color: #292a2d;
+}
+
+.dark .sidebar-brand span {
+  color: #f1f5f9;
+}
+
+.dark .sidebar-brand p,
+.dark .sidebar-navigation > div.pt-4 > div:first-child,
+.dark .sidebar-navigation > div.pt-4 button {
+  color: #a5b4cc;
+}
+
+.dark .sidebar-brand > div:first-child > div:first-child {
+  background: linear-gradient(135deg, #27223d, #1c293e);
+}
+
+.dark .sidebar-location > div {
+  background: #191a1d;
+  border-color: #303137;
+}
+
+.dark .sidebar-navigation > button:not(.bg-blue-600) {
+  color: #c0cad9;
+}
+
+.dark .sidebar-navigation > button:not(.bg-blue-600):hover,
+.dark .sidebar-navigation > div.pt-4 button:hover {
+  background: #202125;
+}
+
+.dark .sidebar-navigation > button:not(.bg-blue-600) > div:first-child > div {
+  color: #aab7cc;
+}
+
+.dark .sidebar-navigation > button.bg-blue-600 {
+  color: #91b5ff;
+  background: #1b2a46;
+  box-shadow: inset 3px 0 #5790ff;
+}
+
+.dark .sidebar-navigation > button.bg-blue-600 > div:first-child > div,
+.dark .sidebar-navigation > button.bg-blue-600 > span {
+  color: #a8c5ff;
+  background: #263b5f;
+}
+
+.dark .sidebar-footer {
+  border-color: #292a2d;
+}
+
+.dark .sidebar-footer > div > p {
+  color: #e2e8f0;
+}
+
+.dark .app-topbar {
+  background: rgb(17 18 20 / 96%);
+  border-color: #292a2d;
+}
+
+.dark .app-topbar > div:first-child h1 {
+  color: #e5eaf2;
+}
+
+.dark .app-topbar > div:first-child p {
+  color: #9ca9bd;
+}
+
+.dark .app-topbar [data-tour="location"],
+.dark .app-topbar > div:last-child > div {
+  background: #191a1d;
+  border-color: #33353a;
+  color: #d3dbe8;
+}
+
+.dark .app-topbar [data-tour="location"] > svg {
+  color: #a9bbd7;
+}
+
+.dark .directory-hero {
+  border-color: #2a303b;
+  background: linear-gradient(100deg, #151922 0%, #14171d 70%, #181923 100%);
+}
+
+.dark .directory-hero h2 {
+  color: #eef3fc;
+}
+
+.dark .directory-hero .directory-hero-subtitle,
+.dark .directory-hero .directory-process {
+  color: #a5b2c8;
+}
+
+.dark .directory-hero .directory-hero-icon {
+  background: #252b43;
+  color: #a5a0ff;
+}
+
+.dark .directory-hero .directory-clock {
+  background: #191a1d;
+  border-color: #33353a;
+  color: #e0e6f0;
+}
+
+.dark .directory-controls {
+  background: #111214;
+  border-color: #292a2d;
+}
+
+.dark .directory-search-row input,
+.dark .directory-controls input {
+  background: #191a1d;
+  border-color: #36383e;
+  color: #e5eaf2;
+}
+
+.dark .directory-search-row input::placeholder,
+.dark .directory-controls input::placeholder {
+  color: #8994a6;
+}
+
+.dark .directory-location-note,
+.dark .directory-results-label {
+  color: #a6b5cd;
+}
+
+.dark .directory-controls .directory-filter-row {
+  border-color: #292a2d;
+}
+
+.dark .directory-controls .directory-filter-row button:not(.bg-gray-900):not(.bg-white):not(.bg-emerald-600):not(.bg-blue-600) {
+  border-color: #373940;
+  background: #1b1c1f;
+  color: #c0cad9;
+}
+
+.dark .directory-controls .directory-filter-row button.bg-gray-900 {
+  background: #326fe0;
+  color: #fff;
+}
+
+.dark .directory-controls [data-tour="categories"] button {
+  border-color: #36383e;
+  background: #1b1c1f;
+  color: #c0cad9;
+}
+
+.dark .directory-controls [data-tour="categories"] button.bg-blue-600 {
+  border-color: #315f9f;
+  background: #244a7f;
+  color: #eef5ff;
+}
+
+.dark .directory-company-card {
+  border-color: #2b2e34;
+  background: #141517;
+  box-shadow: 0 2px 7px rgb(0 0 0 / 18%);
+}
+
+.dark .directory-company-card:hover {
+  border-color: #46536a;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 28%);
+}
+
+.dark .directory-company-monogram {
+  background: #24324b;
+  color: #9fc1ff;
+}
+
+.dark .directory-company-name {
+  color: #e4eaf4;
+}
+
+.dark .directory-company-meta > span {
+  background: #22252a;
+  color: #bac5d6;
+}
+
+.dark .directory-company-meta .directory-verified {
+  background: #15382b;
+  color: #76ddb0;
+}
+
+.dark .directory-company-description,
+.dark .directory-company-contact,
+.dark .directory-company-status {
+  color: #a8b3c5;
+}
+
+.dark .directory-company-contact,
+.dark .directory-company-status {
+  border-color: #2c2e34;
+}
+
+.dark .directory-company-contact a {
+  color: #8bb6ff;
+}
+
+.dark .directory-company-status > span:first-child {
+  color: #a7b3c7;
+}
+
+.dark .directory-company-status .directory-rating {
+  color: #d5deeb;
+}
+
+.dark .directory-company-actions > a,
+.dark .directory-company-actions > button,
+.dark .directory-company-actions > button.directory-details {
+  border-color: #363940;
+  background: #1b1c1f;
+  color: #d1dbea;
+}
+
+.dark .directory-company-actions > a:hover,
+.dark .directory-company-actions > button:hover {
+  border-color: #5271a0;
+  background: #232b39;
+  color: #b4ceff;
+}
+
+.dark .directory-view > .rounded-xl,
+.dark .directory-view > .rounded-xl h2,
+.dark .directory-view > .rounded-xl p {
+  color: #d8e0ed;
+}
+
+@media (max-width: 600px) {
+  .dark .directory-company-contact,
+  .dark .directory-company-status {
+    border-color: #2c2e34;
   }
 }

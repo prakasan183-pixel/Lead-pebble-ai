@@ -78,15 +78,15 @@ export function LeadMapView({
   const [statusFilter, setStatusFilter] = useState<'all' | 'verified_only' | 'missing_only'>('all');
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [hasAuthError, setHasAuthError] = useState(false);
-  const [useFallbackMap, setUseFallbackMap] = useState(false);
+  const [useFallbackMap, setUseFallbackMap] = useState(() => !apiKey);
 
   // Listen for key changes in localStorage
   useEffect(() => {
     const handleKeyChange = (e: any) => {
-      if (e.detail) {
-        setApiKey(e.detail);
-        setHasAuthError(false);
-      }
+      const nextKey = typeof e.detail === 'string' ? e.detail : '';
+      setApiKey(nextKey);
+      setHasAuthError(false);
+      setUseFallbackMap(!nextKey);
     };
     window.addEventListener('maps-key-changed', handleKeyChange);
     return () => window.removeEventListener('maps-key-changed', handleKeyChange);
